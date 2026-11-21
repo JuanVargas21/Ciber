@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero de eventos Kenworth</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb; --card: #ffffff; --ink: #0b0b0b; --ink2: #52514e; --ink3: #77766f;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --wash: rgba(11,11,11,0.04);
+  --series: #2a78d6;
+  --crit: #d03b3b; --warn: #fab219; --good: #0ca30c; --good-text: #006300;
+  --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface: #1a1a19; --card: #222220; --ink: #f0efec; --ink2: #c3c2b7; --ink3: #9d9c92;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.05);
+    --series: #3987e5; --good-text: #0ca30c; --focus: #3987e5;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 0 0 4px; }
+.sub { color: var(--ink2); margin: 0 0 16px; }
+.note { color: var(--ink2); font-size: 13px; border-left: 3px solid var(--axis); padding: 4px 12px; margin: 12px 0 24px; }
+section { margin-top: 28px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.kpi .v { font-size: 30px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--ink2); font-size: 13px; margin-top: 2px; }
+.kpi .d { color: var(--ink3); font-size: 12px; margin-top: 6px; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; color: var(--ink2); font-size: 13px; }
+.flow b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.flow .arrow { color: var(--ink3); }
+.bars { display: grid; gap: 10px; margin-top: 12px; }
+.bar { display: grid; grid-template-columns: minmax(150px, 280px) 1fr 44px; align-items: center; gap: 12px; }
+.bar .name { color: var(--ink2); }
+.bar .track { height: 18px; position: relative; }
+.bar .fill { height: 100%; background: var(--series); border-radius: 0 4px 4px 0; min-width: 3px; }
+.bar .n { text-align: right; font-variant-numeric: tabular-nums; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-alta { background: var(--crit); color: #fff; }
+.b-media { background: var(--warn); color: #0b0b0b; }
+.b-baja { background: var(--good); color: #fff; }
+.b-cerrada { border: 1px solid var(--axis); color: var(--ink2); }
+.b-normal { color: var(--ink3); border: 1px solid var(--grid); font-weight: 500; }
+.b-alerta { border: 1px solid var(--crit); color: var(--ink); }
+.b-bloq { border: 1px solid var(--warn); color: var(--ink); }
+.b-fp { border: 1px solid var(--axis); color: var(--ink2); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--ink2); font-weight: 600; position: sticky; top: 0; background: var(--card); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: var(--wash); }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.scroll { overflow-x: auto; }
+.muted { color: var(--ink3); }
+details.caso { border-top: 1px solid var(--grid); padding: 10px 0; }
+details.caso:first-of-type { border-top: 0; }
+details.caso summary { cursor: pointer; display: grid; grid-template-columns: 52px 1fr auto auto; gap: 12px; align-items: center; list-style: none; }
+details.caso summary::-webkit-details-marker { display: none; }
+details.caso .score { font-variant-numeric: tabular-nums; color: var(--ink2); white-space: nowrap; }
+details.caso dl { margin: 10px 0 0 64px; display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; }
+details.caso dt { color: var(--ink2); }
+details.caso dd { margin: 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+input, select, button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--axis); border-radius: 6px; padding: 6px 10px; }
+input { min-width: 290px; }
+button:disabled { opacity: .45; }
+button, select { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; color: var(--ink2); }
+a.caso-link { color: var(--series); cursor: pointer; text-decoration: underline; }
+.limits li { margin: 4px 0; color: var(--ink2); }
+@media (max-width: 640px) { .bar { grid-template-columns: 1fr 44px; } .bar .track { grid-column: 1 / -1; grid-row: 2; } details.caso summary { grid-template-columns: 48px 1fr; } details.caso dl { margin-left: 0; grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tablero de eventos y riesgo</h1>
+  <p class="sub">Kenworth de la Montaña · EstudIA Ciberseguridad (reto 8) · eventos del 20 de noviembre de 2026</p>
+  <p class="note">Datos de prueba del laboratorio, sin información real de la empresa. Una alerta es una señal para revisar, no un incidente confirmado; los falsos positivos son propuestas pendientes de confirmar con el responsable del activo.</p>
+
+  <section id="resumen" aria-label="Resumen">
+    <div class="kpis" id="kpis"></div>
+    <div class="card" style="margin-top:12px">
+      <h2>Del evento al caso</h2>
+      <div class="flow" id="flow"></div>
+    </div>
+  </section>
+
+  <section aria-label="Patrones">
+    <div class="card">
+      <h2>Eventos por patrón</h2>
+      <p class="sub" id="patrones-sub" style="margin:0"></p>
+      <div class="bars" id="patrones"></div>
+    </div>
+  </section>
+
+  <section aria-label="Casos y riesgo">
+    <div class="card">
+      <h2>Casos y nivel de riesgo</h2>
+      <p class="sub" style="margin:0 0 8px">Riesgo didáctico = impacto (1 a 3) × exposición (1 a 3): 6 a 9 alta, 3 a 4 media, 1 a 2 baja. No es CVSS ni metodología oficial de la empresa. Abre cada caso para ver la justificación.</p>
+      <div id="casos"></div>
+    </div>
+  </section>
+
+  <section aria-label="Alertas">
+    <div class="card">
+      <h2>Alertas</h2>
+      <div class="scroll"><table id="t-alertas"></table></div>
+    </div>
+  </section>
+
+  <section aria-label="Tablero de eventos">
+    <div class="card">
+      <h2>Tablero de eventos</h2>
+      <p class="sub" style="margin:0">Identificador, tipo, patrón y origen de cada uno de los eventos analizados.</p>
+      <div class="filters">
+        <input id="f-q" type="search" placeholder="Buscar por ID, IP, activo o usuario" aria-label="Buscar">
+        <select id="f-patron" aria-label="Patrón"></select>
+        <select id="f-tipo" aria-label="Tipo de evento"></select>
+        <select id="f-clase" aria-label="Clasificación"></select>
+        <select id="f-caso" aria-label="Caso"></select>
+        <button id="f-reset" type="button">Limpiar</button>
+      </div>
+      <div class="scroll"><table id="t-eventos"></table></div>
+      <div class="pager"><span id="pg-info"></span><button id="pg-prev" type="button">Anterior</button><button id="pg-next" type="button">Siguiente</button></div>
+    </div>
+  </section>
+
+  <section aria-label="Límites">
+    <div class="card">
+      <h2>Límites de este MVP</h2>
+      <ul class="limits" id="limites"></ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const D = /*__DATOS__*/null;
+const h = (tag, attrs, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') el.className = v; else if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null) el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return el;
+};
+const fmt = n => n.toLocaleString('es-CO');
+const R = D.resumen;
+
+function nivelBadge(n, estado) {
+  if (!n) return h('span', { class: 'badge b-cerrada' }, '✓ Cerrada (FP propuesto)');
+  const m = { Alta: ['b-alta', '▲'], Media: ['b-media', '◆'], Baja: ['b-baja', '●'] }[n];
+  return h('span', { class: 'badge ' + m[0] }, m[1] + ' ' + n);
+}
+function claseBadge(c) {
+  const cls = { 'Normal': 'b-normal', 'Alerta': 'b-alerta', 'Alerta (bloqueado)': 'b-bloq', 'Falso positivo (propuesto)': 'b-fp', 'Sin clasificar': 'b-normal' }[c];
+  const icon = { 'Normal': '·', 'Alerta': '⚑', 'Alerta (bloqueado)': '⛔', 'Falso positivo (propuesto)': '✓', 'Sin clasificar': '?' }[c];
+  return h('span', { class: 'badge ' + cls }, icon + ' ' + c);
+}
+
+// KPIs
+const riesgo = R.riesgo;
+const kp = [
+  [fmt(R.eventos), 'Eventos analizados', 'Archivo eventos_normalizados.csv'],
+  [R.alertas, 'Alertas', `${R.alertas_base} del analizador base + ${R.alertas - R.alertas_base} del equipo`],
+  [R.falsos_positivos, 'Falsos positivos propuestos', 'Cubiertos por el cambio autorizado CH01'],
+  [R.casos_abiertos, 'Casos por revisar', `${R.casos} casos en total tras correlacionar alertas`],
+  [`${riesgo.Alta || 0} · ${riesgo.Media || 0} · ${riesgo.Baja || 0}`, 'Riesgo alta · media · baja', 'Solo casos abiertos'],
+];
+document.getElementById('kpis').append(...kp.map(([v, l, d]) => h('div', { class: 'card kpi' }, h('div', { class: 'v' }, v), h('div', { class: 'l' }, l), h('div', { class: 'd' }, d))));
+
+document.getElementById('flow').append(
+  h('span', null, h('b', null, fmt(R.eventos)), ' eventos'), h('span', { class: 'arrow' }, '→'),
+  h('span', null, h('b', null, R.alertas), ' alertas'), h('span', { class: 'arrow' }, '→'),
+  h('span', null, h('b', null, R.casos), ' casos (alertas correlacionadas)'), h('span', { class: 'arrow' }, '→'),
+  h('span', null, h('b', null, R.falsos_positivos), ' alertas cerradas como falso positivo propuesto · ', h('b', null, R.casos_abiertos), ' casos por revisar')
+);
+
+// Patrones (sin el tráfico esperado, que domina la escala)
+const normal = 'Tráfico web esperado (R01)';
+const resto = Object.entries(R.patrones).filter(([k]) => k !== normal).sort((a, b) => b[1] - a[1]);
+const total_resto = resto.reduce((s, [, n]) => s + n, 0);
+document.getElementById('patrones-sub').textContent = `${fmt(R.patrones[normal] || 0)} de ${fmt(R.eventos)} eventos son tráfico web esperado hacia WEB-LAB; los otros ${total_resto} se reparten así.`;
+const max = Math.max(...resto.map(x => x[1]));
+document.getElementById('patrones').append(...resto.map(([k, n]) => h('div', { class: 'bar' },
+  h('div', { class: 'name' }, k),
+  h('div', { class: 'track' }, h('div', { class: 'fill', style: `width:${(n / max * 100).toFixed(1)}%` })),
+  h('div', { class: 'n' }, n))));
+
+// Casos
+const filtroCaso = id => { const s = document.getElementById('f-caso'); s.value = id; state.page = 0; renderEventos(); document.getElementById('t-eventos').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+document.getElementById('casos').append(...D.casos.map(c => {
+  const dl = h('dl', null,
+    h('dt', null, 'Activo'), h('dd', null, c.activo),
+    h('dt', null, 'Origen'), h('dd', { class: 'mono' }, c.origen),
+    h('dt', null, 'Eventos'), h('dd', null, h('span', { class: 'mono' }, c.eventos.length > 4 ? `${c.eventos[0]} a ${c.eventos[c.eventos.length - 1]} (${c.eventos.length})` : c.eventos.join(', ')), ' · ', h('a', { class: 'caso-link', tabindex: '0', onclick: () => filtroCaso(c.caso_id), onkeydown: e => { if (e.key === 'Enter') filtroCaso(c.caso_id); } }, 'ver en el tablero')),
+    h('dt', null, 'Alertas'), h('dd', { class: 'mono' }, c.alertas.join(', ') || '-'),
+    h('dt', null, 'Evidencia'), h('dd', null, c.evidencia),
+    h('dt', null, 'Justificación'), h('dd', null, c.justificacion),
+    h('dt', null, 'Siguiente paso'), h('dd', null, c.siguiente));
+  const score = c.puntaje == null ? 'sin puntaje' : `${c.impacto} × ${c.exposicion} = ${c.puntaje}`;
+  return h('details', { class: 'caso' },
+    h('summary', null, h('span', { class: 'mono' }, c.caso_id), h('span', null, c.titulo), h('span', { class: 'score' }, score), nivelBadge(c.nivel)),
+    dl);
+}));
+
+// Alertas
+const ta = document.getElementById('t-alertas');
+ta.append(h('thead', null, h('tr', null, ['Alerta', 'Evento', 'Fecha y hora', 'Tipo', 'Origen', 'Activo destino', 'Estado', 'Detección'].map(x => h('th', null, x)))),
+  h('tbody', null, D.alertas.map(a => h('tr', null,
+    h('td', { class: 'mono' }, a.alerta_id), h('td', { class: 'mono' }, a.evento_id), h('td', { class: 'mono' }, a.fecha_hora.replace('T', ' ')),
+    h('td', null, a.tipo, h('div', { class: 'muted' }, a.motivo)), h('td', { class: 'mono' }, a.origen_ip), h('td', null, a.activo_destino),
+    h('td', null, a.estado.startsWith('Falso') ? h('span', { class: 'badge b-fp' }, '✓ ' + a.estado) : h('span', { class: 'badge b-alerta' }, '⚑ ' + a.estado), h('div', { class: 'muted' }, a.disposicion)),
+    h('td', null, a.origen_deteccion)))));
+
+// Tablero de eventos
+const state = { page: 0, size: 25 };
+const uniq = k => [...new Set(D.eventos.map(e => e[k]))].sort();
+const fill = (id, label, vals) => { const s = document.getElementById(id); s.replaceChildren(h('option', { value: '' }, label), ...vals.map(v => h('option', { value: v }, v))); };
+fill('f-patron', 'Todos los patrones', uniq('patron'));
+fill('f-tipo', 'Todos los tipos', uniq('tipo'));
+fill('f-clase', 'Toda clasificación', uniq('clase'));
+fill('f-caso', 'Todos los casos', D.casos.map(c => c.caso_id));
+const te = document.getElementById('t-eventos');
+te.append(h('thead', null, h('tr', null, ['ID', 'Fecha y hora', 'Tipo de evento', 'Patrón', 'Origen', 'Destino', 'Regla', 'Clasificación', 'Alerta / caso'].map(x => h('th', null, x)))), h('tbody'));
+function filtrados() {
+  const q = document.getElementById('f-q').value.trim().toLowerCase();
+  const v = id => document.getElementById(id).value;
+  return D.eventos.filter(e => (!q || [e.id, e.origen, e.origen_nombre, e.destino, e.destino_nombre, e.usuario].join(' ').toLowerCase().includes(q))
+    && (!v('f-patron') || e.patron === v('f-patron')) && (!v('f-tipo') || e.tipo === v('f-tipo'))
+    && (!v('f-clase') || e.clase === v('f-clase')) && (!v('f-caso') || e.caso === v('f-caso')));
+}
+function renderEventos() {
+  const rows = filtrados();
+  const pages = Math.max(1, Math.ceil(rows.length / state.size));
+  state.page = Math.min(state.page, pages - 1);
+  const vis = rows.slice(state.page * state.size, (state.page + 1) * state.size);
+  te.tBodies[0].replaceChildren(...vis.map(e => h('tr', null,
+    h('td', { class: 'mono' }, e.id), h('td', { class: 'mono' }, e.fecha), h('td', null, e.tipo, e.usuario !== '-' ? h('div', { class: 'muted' }, e.usuario) : null),
+    h('td', null, e.patron),
+    h('td', null, h('span', { class: 'mono' }, e.origen), h('div', { class: 'muted' }, e.origen_nombre)),
+    h('td', null, h('span', { class: 'mono' }, `${e.destino}:${e.puerto}`), h('div', { class: 'muted' }, e.destino_nombre)),
+    h('td', { class: 'mono' }, e.regla), h('td', null, claseBadge(e.clase)),
+    h('td', { class: 'mono' }, [...e.alertas, e.caso].filter(Boolean).join(' · ') || '-'))));
+  document.getElementById('pg-info').textContent = `${fmt(rows.length)} eventos · página ${state.page + 1} de ${pages}`;
+  document.getElementById('pg-prev').disabled = state.page === 0;
+  document.getElementById('pg-next').disabled = state.page >= pages - 1;
+}
+['f-q', 'f-patron', 'f-tipo', 'f-clase', 'f-caso'].forEach(id => document.getElementById(id).addEventListener('input', () => { state.page = 0; renderEventos(); }));
+document.getElementById('f-reset').addEventListener('click', () => { ['f-q', 'f-patron', 'f-tipo', 'f-clase', 'f-caso'].forEach(id => document.getElementById(id).value = ''); state.page = 0; renderEventos(); });
+document.getElementById('pg-prev').addEventListener('click', () => { state.page--; renderEventos(); });
+document.getElementById('pg-next').addEventListener('click', () => { state.page++; renderEventos(); });
+renderEventos();
+
+// Límites
+document.getElementById('limites').append(...[
+  'Los datos son de prueba: no representan la infraestructura, los registros ni las políticas reales de Kenworth.',
+  `Umbrales usados: ${D.parametros.fallos_umbral} fallos en ${D.parametros.ventana_minutos} minutos, horario ${D.parametros.hora_inicio}:00-${D.parametros.hora_fin}:00 y volumen desde ${fmt(D.parametros.volumen_revision_bytes)} bytes. Son supuestos editables en parametros_alertas.json.`,
+  'Las alertas de sondeo y de éxito tras fallos son una extensión del equipo; no vienen del analizador base ni de una referencia oficial.',
+  'Los puntajes de exposición dependen de supuestos que hay que confirmar con la empresa (por ejemplo, si R02 es realmente una excepción vigente).',
+  'Las actualizaciones pendientes y la restauración de respaldos no se evalúan aquí: faltan versiones, boletines y pruebas de restauración.',
+  'Ningún falso positivo está cerrado de forma definitiva hasta que lo confirme el responsable del activo.'
+].map(t => h('li', null, t)));
+</script>
+</body>
+</html>
