@@ -3,144 +3,200 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tablero de eventos Kenworth</title>
+<title>Kenworth de la Montaña | Tablero de eventos</title>
 <style>
 :root {
   color-scheme: light;
-  --surface: #fcfcfb; --card: #ffffff; --ink: #0b0b0b; --ink2: #52514e; --ink3: #77766f;
-  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --wash: rgba(11,11,11,0.04);
-  --series: #2a78d6;
-  --crit: #d03b3b; --warn: #fab219; --good: #0ca30c; --good-text: #006300;
+  --bg: #f1f3f6; --card: #ffffff; --ink: #15202b; --ink2: #4b5a69; --ink3: #7a8794;
+  --line: #e3e7ec; --line2: #cfd6de; --wash: #f6f8fa; --shadow: 0 1px 2px rgba(16,32,48,.06), 0 4px 16px rgba(16,32,48,.05);
+  --brand: #12324f; --brand2: #1d4f7c; --on-brand: #ffffff;
+  --series: #2a78d6; --series-soft: rgba(42,120,214,.12);
+  --crit: #d03b3b; --crit-soft: rgba(208,59,59,.10);
+  --warn: #fab219; --warn-soft: rgba(250,178,25,.18);
+  --good: #0ca30c; --good-soft: rgba(12,163,12,.10);
   --focus: #2a78d6;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --surface: #1a1a19; --card: #222220; --ink: #f0efec; --ink2: #c3c2b7; --ink3: #9d9c92;
-    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.05);
-    --series: #3987e5; --good-text: #0ca30c; --focus: #3987e5;
+    --bg: #121416; --card: #1c1f22; --ink: #eef0f2; --ink2: #b9c1c9; --ink3: #8a949e;
+    --line: #2a2e33; --line2: #3a4046; --wash: #23272b; --shadow: 0 1px 2px rgba(0,0,0,.4);
+    --brand: #0f2740; --brand2: #1a4570;
+    --series: #3987e5; --series-soft: rgba(57,135,229,.18); --focus: #3987e5;
+    --crit-soft: rgba(230,103,103,.16); --warn-soft: rgba(250,178,25,.16); --good-soft: rgba(12,163,12,.18);
   }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--surface); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
-h1 { font-size: 22px; margin: 0 0 4px; }
-h2 { font-size: 16px; margin: 0 0 4px; }
-.sub { color: var(--ink2); margin: 0 0 16px; }
-.note { color: var(--ink2); font-size: 13px; border-left: 3px solid var(--axis); padding: 4px 12px; margin: 12px 0 24px; }
-section { margin-top: 28px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-.kpi .v { font-size: 30px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.kpi .l { color: var(--ink2); font-size: 13px; margin-top: 2px; }
-.kpi .d { color: var(--ink3); font-size: 12px; margin-top: 6px; }
-.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; color: var(--ink2); font-size: 13px; }
-.flow b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.flow .arrow { color: var(--ink3); }
-.bars { display: grid; gap: 10px; margin-top: 12px; }
-.bar { display: grid; grid-template-columns: minmax(150px, 280px) 1fr 44px; align-items: center; gap: 12px; }
-.bar .name { color: var(--ink2); }
-.bar .track { height: 18px; position: relative; }
-.bar .fill { height: 100%; background: var(--series); border-radius: 0 4px 4px 0; min-width: 3px; }
-.bar .n { text-align: right; font-variant-numeric: tabular-nums; }
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+/* Encabezado */
+.top { background: linear-gradient(120deg, var(--brand), var(--brand2)); color: var(--on-brand); }
+.top .in { max-width: 1200px; margin: 0 auto; padding: 22px 24px; display: flex; align-items: center; gap: 14px; }
+.top .mark { width: 8px; height: 34px; border-radius: 3px; background: var(--warn); flex: none; }
+.top h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
+.top h1 span { font-weight: 400; opacity: .8; }
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 24px 56px; display: grid; gap: 24px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 20px; }
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.head h2 { margin: 0; font-size: 16px; font-weight: 650; }
+.head .hint { color: var(--ink3); font-size: 12.5px; }
+.eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); font-weight: 600; margin-bottom: 2px; }
+.sub { color: var(--ink2); margin: 0 0 12px; font-size: 13px; }
+
+/* KPIs */
+.kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.kpi { position: relative; overflow: hidden; padding: 16px 18px; }
+.kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--k, var(--series)); }
+.kpi .l { color: var(--ink2); font-size: 12.5px; font-weight: 600; }
+.kpi .v { font-size: 32px; font-weight: 700; line-height: 1.15; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.kpi .d { color: var(--ink3); font-size: 12px; }
+.kpi .chips { display: flex; gap: 6px; margin: 8px 0 6px; flex-wrap: wrap; }
+
+.two { display: grid; grid-template-columns: 5fr 7fr; gap: 24px; align-items: stretch; }
+
+/* Flujo */
+.flow { display: grid; gap: 10px; }
+.step { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--wash); position: relative; }
+.step .n { font-size: 24px; font-weight: 700; min-width: 56px; font-variant-numeric: tabular-nums; }
+.step .t { color: var(--ink2); font-size: 13px; }
+.step.out { background: var(--card); }
+.step .tag { margin-left: auto; }
+.down { text-align: center; color: var(--ink3); line-height: 1; font-size: 14px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.split .step { flex-direction: column; align-items: flex-start; gap: 2px; }
+.split .n { font-size: 22px; }
+
+/* Barras */
+.bars { display: grid; gap: 14px; margin-top: 6px; }
+.bar { display: grid; grid-template-columns: minmax(130px, 230px) 1fr 40px; align-items: center; gap: 12px; }
+.bar .name { color: var(--ink2); font-size: 13px; }
+.bar .track { height: 16px; background: var(--wash); border-radius: 0 8px 8px 0; }
+.bar .fill { height: 100%; background: var(--series); border-radius: 0 8px 8px 0; min-width: 3px; }
+.bar .n { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* Etiquetas */
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1.5; }
 .b-alta { background: var(--crit); color: #fff; }
 .b-media { background: var(--warn); color: #0b0b0b; }
 .b-baja { background: var(--good); color: #fff; }
-.b-cerrada { border: 1px solid var(--axis); color: var(--ink2); }
-.b-normal { color: var(--ink3); border: 1px solid var(--grid); font-weight: 500; }
-.b-alerta { border: 1px solid var(--crit); color: var(--ink); }
-.b-bloq { border: 1px solid var(--warn); color: var(--ink); }
-.b-fp { border: 1px solid var(--axis); color: var(--ink2); }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
-th { color: var(--ink2); font-weight: 600; position: sticky; top: 0; background: var(--card); }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-tbody tr:hover { background: var(--wash); }
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
-.scroll { overflow-x: auto; }
-.muted { color: var(--ink3); }
-details.caso { border-top: 1px solid var(--grid); padding: 10px 0; }
-details.caso:first-of-type { border-top: 0; }
-details.caso summary { cursor: pointer; display: grid; grid-template-columns: 52px 1fr auto auto; gap: 12px; align-items: center; list-style: none; }
+.b-cerrada, .b-fp { background: var(--wash); border: 1px solid var(--line2); color: var(--ink2); }
+.b-normal { background: transparent; border: 1px solid var(--line); color: var(--ink3); font-weight: 500; }
+.b-alerta { background: var(--crit-soft); color: var(--ink); border: 1px solid var(--crit); }
+.b-bloq { background: var(--warn-soft); color: var(--ink); border: 1px solid var(--warn); }
+.b-ok { background: var(--good-soft); color: var(--ink); border: 1px solid var(--good); }
+
+/* Casos */
+.casos { display: grid; gap: 10px; }
+details.caso { border: 1px solid var(--line); border-left: 5px solid var(--line2); border-radius: 10px; background: var(--card); }
+details.caso.alta { border-left-color: var(--crit); }
+details.caso.media { border-left-color: var(--warn); }
+details.caso.baja { border-left-color: var(--good); }
+details.caso[open] { background: var(--wash); }
+details.caso summary { cursor: pointer; display: grid; grid-template-columns: 48px 1fr auto auto 18px; gap: 14px; align-items: center; list-style: none; padding: 12px 16px; }
 details.caso summary::-webkit-details-marker { display: none; }
-details.caso .score { font-variant-numeric: tabular-nums; color: var(--ink2); white-space: nowrap; }
-details.caso dl { margin: 10px 0 0 64px; display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; }
-details.caso dt { color: var(--ink2); }
-details.caso dd { margin: 0; }
-.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-input, select, button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--axis); border-radius: 6px; padding: 6px 10px; }
-input { min-width: 290px; }
-button:disabled { opacity: .45; }
-button, select { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; color: var(--ink2); }
+details.caso summary::after { content: "▾"; color: var(--ink3); transition: transform .15s; }
+details.caso[open] summary::after { transform: rotate(180deg); }
+details.caso .ttl { font-weight: 600; }
+details.caso .score { font-variant-numeric: tabular-nums; color: var(--ink2); white-space: nowrap; font-size: 13px; }
+details.caso .body { padding: 2px 16px 16px 78px; display: grid; gap: 10px; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; font-size: 12.5px; color: var(--ink2); }
+dl { margin: 0; display: grid; grid-template-columns: 120px 1fr; gap: 8px 14px; }
+dt { color: var(--ink3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+dd { margin: 0; }
 a.caso-link { color: var(--series); cursor: pointer; text-decoration: underline; }
-.limits li { margin: 4px 0; color: var(--ink2); }
-@media (max-width: 640px) { .bar { grid-template-columns: 1fr 44px; } .bar .track { grid-column: 1 / -1; grid-row: 2; } details.caso summary { grid-template-columns: 48px 1fr; } details.caso dl { margin-left: 0; grid-template-columns: 1fr; } }
+
+/* Tablas */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; background: var(--wash); color: var(--ink2); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; font-weight: 650; border-bottom: 1px solid var(--line2); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:nth-child(even) { background: color-mix(in srgb, var(--wash) 55%, transparent); }
+tbody tr:hover { background: var(--series-soft); }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.muted { color: var(--ink3); font-size: 12.5px; }
+.id { font-weight: 650; }
+
+/* Filtros */
+.toolbar { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr) auto; gap: 10px; margin-bottom: 14px; }
+input, select, button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line2); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+input::placeholder { color: var(--ink3); }
+button { cursor: pointer; font-weight: 600; }
+button:hover:not(:disabled) { background: var(--wash); }
+button:disabled { opacity: .4; cursor: default; }
+select { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 12px; color: var(--ink2); flex-wrap: wrap; }
+.pager .btns { display: flex; gap: 8px; }
+
+@media (max-width: 980px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .two { grid-template-columns: 1fr; }
+  .toolbar { grid-template-columns: 1fr 1fr; }
+  .toolbar input { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .wrap { padding: 16px 14px 40px; }
+  .top .in { padding: 18px 14px; } .top h1 { font-size: 18px; }
+  .bar { grid-template-columns: 1fr 40px; } .bar .track { grid-column: 1 / -1; grid-row: 2; }
+  details.caso summary { grid-template-columns: 44px 1fr 18px; } details.caso .score, details.caso summary .badge { grid-column: 2; justify-self: start; }
+  details.caso .body { padding-left: 16px; } dl { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Tablero de eventos y riesgo</h1>
-  <p class="sub">Kenworth de la Montaña · EstudIA Ciberseguridad (reto 8) · eventos del 20 de noviembre de 2026</p>
-  <p class="note">Datos de prueba del laboratorio, sin información real de la empresa. Una alerta es una señal para revisar, no un incidente confirmado; los falsos positivos son propuestas pendientes de confirmar con el responsable del activo.</p>
+<header class="top"><div class="in"><div class="mark"></div><h1>Kenworth de la Montaña <span>· Tablero de eventos y riesgo</span></h1></div></header>
 
-  <section id="resumen" aria-label="Resumen">
+<main class="wrap">
+  <section aria-label="Resumen">
     <div class="kpis" id="kpis"></div>
-    <div class="card" style="margin-top:12px">
-      <h2>Del evento al caso</h2>
-      <div class="flow" id="flow"></div>
-    </div>
   </section>
 
-  <section aria-label="Patrones">
+  <section class="two" aria-label="Flujo y patrones">
     <div class="card">
-      <h2>Eventos por patrón</h2>
-      <p class="sub" id="patrones-sub" style="margin:0"></p>
+      <div class="eyebrow">Resumen</div>
+      <div class="head"><h2>Del evento al caso</h2></div>
+      <div class="flow" id="flow"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Patrones</div>
+      <div class="head"><h2>Eventos por patrón</h2></div>
+      <p class="sub" id="patrones-sub"></p>
       <div class="bars" id="patrones"></div>
     </div>
   </section>
 
-  <section aria-label="Casos y riesgo">
-    <div class="card">
-      <h2>Casos y nivel de riesgo</h2>
-      <p class="sub" style="margin:0 0 8px">Riesgo didáctico = impacto (1 a 3) × exposición (1 a 3): 6 a 9 alta, 3 a 4 media, 1 a 2 baja. No es CVSS ni metodología oficial de la empresa. Abre cada caso para ver la justificación.</p>
-      <div id="casos"></div>
-    </div>
+  <section class="card" aria-label="Casos y riesgo">
+    <div class="eyebrow">Riesgo</div>
+    <div class="head"><h2>Casos y nivel de riesgo</h2><span class="hint">Impacto (1 a 3) × exposición (1 a 3): 6 a 9 alta · 3 a 4 media · 1 a 2 baja</span></div>
+    <p class="sub">Puntaje didáctico, no es CVSS ni metodología oficial de la empresa. Abre cada caso para ver la evidencia y la justificación.</p>
+    <div class="casos" id="casos"></div>
   </section>
 
-  <section aria-label="Alertas">
-    <div class="card">
-      <h2>Alertas</h2>
-      <div class="scroll"><table id="t-alertas"></table></div>
-    </div>
+  <section class="card" aria-label="Alertas">
+    <div class="eyebrow">Detección</div>
+    <div class="head"><h2>Alertas</h2><span class="hint" id="alertas-hint"></span></div>
+    <div class="scroll"><table id="t-alertas"></table></div>
   </section>
 
-  <section aria-label="Tablero de eventos">
-    <div class="card">
-      <h2>Tablero de eventos</h2>
-      <p class="sub" style="margin:0">Identificador, tipo, patrón y origen de cada uno de los eventos analizados.</p>
-      <div class="filters">
-        <input id="f-q" type="search" placeholder="Buscar por ID, IP, activo o usuario" aria-label="Buscar">
-        <select id="f-patron" aria-label="Patrón"></select>
-        <select id="f-tipo" aria-label="Tipo de evento"></select>
-        <select id="f-clase" aria-label="Clasificación"></select>
-        <select id="f-caso" aria-label="Caso"></select>
-        <button id="f-reset" type="button">Limpiar</button>
-      </div>
-      <div class="scroll"><table id="t-eventos"></table></div>
-      <div class="pager"><span id="pg-info"></span><button id="pg-prev" type="button">Anterior</button><button id="pg-next" type="button">Siguiente</button></div>
+  <section class="card" aria-label="Tablero de eventos">
+    <div class="eyebrow">Detalle</div>
+    <div class="head"><h2>Tablero de eventos</h2><span class="hint">ID, tipo, patrón y origen de cada evento analizado</span></div>
+    <div class="toolbar">
+      <input id="f-q" type="search" placeholder="Buscar por ID, IP, activo o usuario" aria-label="Buscar">
+      <select id="f-patron" aria-label="Patrón"></select>
+      <select id="f-tipo" aria-label="Tipo de evento"></select>
+      <select id="f-clase" aria-label="Clasificación"></select>
+      <select id="f-caso" aria-label="Caso"></select>
+      <button id="f-reset" type="button">Limpiar</button>
     </div>
+    <div class="scroll"><table id="t-eventos"></table></div>
+    <div class="pager"><span id="pg-info"></span><div class="btns"><button id="pg-prev" type="button">Anterior</button><button id="pg-next" type="button">Siguiente</button></div></div>
   </section>
-
-  <section aria-label="Límites">
-    <div class="card">
-      <h2>Límites de este MVP</h2>
-      <ul class="limits" id="limites"></ul>
-    </div>
-  </section>
-</div>
+</main>
 
 <script>
 const D = /*__DATOS__*/null;
@@ -155,7 +211,7 @@ const h = (tag, attrs, ...kids) => {
 const fmt = n => n.toLocaleString('es-CO');
 const R = D.resumen;
 
-function nivelBadge(n, estado) {
+function nivelBadge(n) {
   if (!n) return h('span', { class: 'badge b-cerrada' }, '✓ Cerrada (FP propuesto)');
   const m = { Alta: ['b-alta', '▲'], Media: ['b-media', '◆'], Baja: ['b-baja', '●'] }[n];
   return h('span', { class: 'badge ' + m[0] }, m[1] + ' ' + n);
@@ -168,62 +224,73 @@ function claseBadge(c) {
 
 // KPIs
 const riesgo = R.riesgo;
-const kp = [
-  [fmt(R.eventos), 'Eventos analizados', 'Archivo eventos_normalizados.csv'],
-  [R.alertas, 'Alertas', `${R.alertas_base} del analizador base + ${R.alertas - R.alertas_base} del equipo`],
-  [R.falsos_positivos, 'Falsos positivos propuestos', 'Cubiertos por el cambio autorizado CH01'],
-  [R.casos_abiertos, 'Casos por revisar', `${R.casos} casos en total tras correlacionar alertas`],
-  [`${riesgo.Alta || 0} · ${riesgo.Media || 0} · ${riesgo.Baja || 0}`, 'Riesgo alta · media · baja', 'Solo casos abiertos'],
-];
-document.getElementById('kpis').append(...kp.map(([v, l, d]) => h('div', { class: 'card kpi' }, h('div', { class: 'v' }, v), h('div', { class: 'l' }, l), h('div', { class: 'd' }, d))));
+const k = (label, valor, detalle, color) => h('div', { class: 'card kpi', style: `--k:${color}` }, h('div', { class: 'l' }, label), h('div', { class: 'v' }, valor), h('div', { class: 'd' }, detalle));
+const kRiesgo = h('div', { class: 'card kpi', style: '--k:var(--crit)' }, h('div', { class: 'l' }, 'Riesgo de casos abiertos'),
+  h('div', { class: 'chips' },
+    h('span', { class: 'badge b-alta' }, `▲ Alta ${riesgo.Alta || 0}`),
+    h('span', { class: 'badge b-media' }, `◆ Media ${riesgo.Media || 0}`),
+    h('span', { class: 'badge b-baja' }, `● Baja ${riesgo.Baja || 0}`)),
+  h('div', { class: 'd' }, 'Impacto × exposición'));
+document.getElementById('kpis').append(
+  k('Eventos analizados', fmt(R.eventos), 'eventos_normalizados.csv', 'var(--series)'),
+  k('Alertas', R.alertas, `${R.alertas_base} del analizador base + ${R.alertas - R.alertas_base} del equipo`, 'var(--warn)'),
+  k('Falsos positivos propuestos', R.falsos_positivos, 'Cubiertos por el cambio autorizado CH01', 'var(--good)'),
+  k('Casos por revisar', R.casos_abiertos, `${R.casos} casos en total tras correlacionar alertas`, 'var(--brand2)'),
+  kRiesgo);
 
+// Flujo
+const step = (n, t, cls) => h('div', { class: 'step ' + (cls || '') }, h('div', { class: 'n' }, n), h('div', { class: 't' }, t));
 document.getElementById('flow').append(
-  h('span', null, h('b', null, fmt(R.eventos)), ' eventos'), h('span', { class: 'arrow' }, '→'),
-  h('span', null, h('b', null, R.alertas), ' alertas'), h('span', { class: 'arrow' }, '→'),
-  h('span', null, h('b', null, R.casos), ' casos (alertas correlacionadas)'), h('span', { class: 'arrow' }, '→'),
-  h('span', null, h('b', null, R.falsos_positivos), ' alertas cerradas como falso positivo propuesto · ', h('b', null, R.casos_abiertos), ' casos por revisar')
-);
+  step(fmt(R.eventos), 'eventos analizados'),
+  h('div', { class: 'down' }, '▼'),
+  step(R.alertas, 'alertas generadas'),
+  h('div', { class: 'down' }, '▼'),
+  step(R.casos, 'casos (alertas correlacionadas)'),
+  h('div', { class: 'down' }, '▼'),
+  h('div', { class: 'split' },
+    h('div', { class: 'step out' }, h('div', { class: 'n' }, R.casos_abiertos), h('div', { class: 't' }, 'casos por revisar')),
+    h('div', { class: 'step out' }, h('div', { class: 'n' }, R.falsos_positivos), h('div', { class: 't' }, 'alertas cerradas como falso positivo propuesto'))));
 
 // Patrones (sin el tráfico esperado, que domina la escala)
 const normal = 'Tráfico web esperado (R01)';
-const resto = Object.entries(R.patrones).filter(([k]) => k !== normal).sort((a, b) => b[1] - a[1]);
+const resto = Object.entries(R.patrones).filter(([p]) => p !== normal).sort((a, b) => b[1] - a[1]);
 const total_resto = resto.reduce((s, [, n]) => s + n, 0);
 document.getElementById('patrones-sub').textContent = `${fmt(R.patrones[normal] || 0)} de ${fmt(R.eventos)} eventos son tráfico web esperado hacia WEB-LAB; los otros ${total_resto} se reparten así.`;
 const max = Math.max(...resto.map(x => x[1]));
-document.getElementById('patrones').append(...resto.map(([k, n]) => h('div', { class: 'bar' },
-  h('div', { class: 'name' }, k),
+document.getElementById('patrones').append(...resto.map(([p, n]) => h('div', { class: 'bar' },
+  h('div', { class: 'name' }, p),
   h('div', { class: 'track' }, h('div', { class: 'fill', style: `width:${(n / max * 100).toFixed(1)}%` })),
   h('div', { class: 'n' }, n))));
 
 // Casos
-const filtroCaso = id => { const s = document.getElementById('f-caso'); s.value = id; state.page = 0; renderEventos(); document.getElementById('t-eventos').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+const state = { page: 0, size: 25 };
+const filtroCaso = id => { document.getElementById('f-caso').value = id; state.page = 0; renderEventos(); document.getElementById('t-eventos').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 document.getElementById('casos').append(...D.casos.map(c => {
-  const dl = h('dl', null,
-    h('dt', null, 'Activo'), h('dd', null, c.activo),
-    h('dt', null, 'Origen'), h('dd', { class: 'mono' }, c.origen),
-    h('dt', null, 'Eventos'), h('dd', null, h('span', { class: 'mono' }, c.eventos.length > 4 ? `${c.eventos[0]} a ${c.eventos[c.eventos.length - 1]} (${c.eventos.length})` : c.eventos.join(', ')), ' · ', h('a', { class: 'caso-link', tabindex: '0', onclick: () => filtroCaso(c.caso_id), onkeydown: e => { if (e.key === 'Enter') filtroCaso(c.caso_id); } }, 'ver en el tablero')),
-    h('dt', null, 'Alertas'), h('dd', { class: 'mono' }, c.alertas.join(', ') || '-'),
-    h('dt', null, 'Evidencia'), h('dd', null, c.evidencia),
-    h('dt', null, 'Justificación'), h('dd', null, c.justificacion),
-    h('dt', null, 'Siguiente paso'), h('dd', null, c.siguiente));
+  const eventosTxt = c.eventos.length > 4 ? `${c.eventos[0]} a ${c.eventos[c.eventos.length - 1]} (${c.eventos.length})` : c.eventos.join(', ');
   const score = c.puntaje == null ? 'sin puntaje' : `${c.impacto} × ${c.exposicion} = ${c.puntaje}`;
-  return h('details', { class: 'caso' },
-    h('summary', null, h('span', { class: 'mono' }, c.caso_id), h('span', null, c.titulo), h('span', { class: 'score' }, score), nivelBadge(c.nivel)),
-    dl);
+  return h('details', { class: 'caso ' + (c.nivel ? c.nivel.toLowerCase() : '') },
+    h('summary', null, h('span', { class: 'mono id' }, c.caso_id), h('span', { class: 'ttl' }, c.titulo), h('span', { class: 'score' }, score), nivelBadge(c.nivel)),
+    h('div', { class: 'body' },
+      h('div', { class: 'meta' }, h('span', { class: 'chip' }, 'Activo: ' + c.activo), h('span', { class: 'chip mono' }, 'Origen: ' + c.origen), h('span', { class: 'chip mono' }, 'Alertas: ' + (c.alertas.join(', ') || '-'))),
+      h('dl', null,
+        h('dt', null, 'Eventos'), h('dd', null, h('span', { class: 'mono' }, eventosTxt), ' · ', h('a', { class: 'caso-link', tabindex: '0', onclick: () => filtroCaso(c.caso_id), onkeydown: e => { if (e.key === 'Enter') filtroCaso(c.caso_id); } }, 'ver en el tablero')),
+        h('dt', null, 'Evidencia'), h('dd', null, c.evidencia),
+        h('dt', null, 'Justificación'), h('dd', null, c.justificacion),
+        h('dt', null, 'Siguiente paso'), h('dd', null, c.siguiente))));
 }));
 
 // Alertas
+document.getElementById('alertas-hint').textContent = `${R.alertas} alertas · ${R.falsos_positivos} falsos positivos propuestos`;
 const ta = document.getElementById('t-alertas');
 ta.append(h('thead', null, h('tr', null, ['Alerta', 'Evento', 'Fecha y hora', 'Tipo', 'Origen', 'Activo destino', 'Estado', 'Detección'].map(x => h('th', null, x)))),
   h('tbody', null, D.alertas.map(a => h('tr', null,
-    h('td', { class: 'mono' }, a.alerta_id), h('td', { class: 'mono' }, a.evento_id), h('td', { class: 'mono' }, a.fecha_hora.replace('T', ' ')),
-    h('td', null, a.tipo, h('div', { class: 'muted' }, a.motivo)), h('td', { class: 'mono' }, a.origen_ip), h('td', null, a.activo_destino),
-    h('td', null, a.estado.startsWith('Falso') ? h('span', { class: 'badge b-fp' }, '✓ ' + a.estado) : h('span', { class: 'badge b-alerta' }, '⚑ ' + a.estado), h('div', { class: 'muted' }, a.disposicion)),
+    h('td', { class: 'mono id' }, a.alerta_id), h('td', { class: 'mono' }, a.evento_id), h('td', { class: 'mono' }, a.fecha_hora.replace('T', ' ')),
+    h('td', null, h('div', { class: 'id' }, a.tipo), h('div', { class: 'muted' }, a.motivo)), h('td', { class: 'mono' }, a.origen_ip), h('td', null, a.activo_destino),
+    h('td', null, a.estado.startsWith('Falso') ? h('span', { class: 'badge b-fp' }, '✓ ' + a.estado) : h('span', { class: 'badge b-alerta' }, '⚑ ' + a.estado), h('div', { class: 'muted', style: 'margin-top:4px' }, a.disposicion)),
     h('td', null, a.origen_deteccion)))));
 
 // Tablero de eventos
-const state = { page: 0, size: 25 };
-const uniq = k => [...new Set(D.eventos.map(e => e[k]))].sort();
+const uniq = key => [...new Set(D.eventos.map(e => e[key]))].sort();
 const fill = (id, label, vals) => { const s = document.getElementById(id); s.replaceChildren(h('option', { value: '' }, label), ...vals.map(v => h('option', { value: v }, v))); };
 fill('f-patron', 'Todos los patrones', uniq('patron'));
 fill('f-tipo', 'Todos los tipos', uniq('tipo'));
@@ -244,7 +311,7 @@ function renderEventos() {
   state.page = Math.min(state.page, pages - 1);
   const vis = rows.slice(state.page * state.size, (state.page + 1) * state.size);
   te.tBodies[0].replaceChildren(...vis.map(e => h('tr', null,
-    h('td', { class: 'mono' }, e.id), h('td', { class: 'mono' }, e.fecha), h('td', null, e.tipo, e.usuario !== '-' ? h('div', { class: 'muted' }, e.usuario) : null),
+    h('td', { class: 'mono id' }, e.id), h('td', { class: 'mono' }, e.fecha), h('td', null, e.tipo, e.usuario !== '-' ? h('div', { class: 'muted' }, e.usuario) : null),
     h('td', null, e.patron),
     h('td', null, h('span', { class: 'mono' }, e.origen), h('div', { class: 'muted' }, e.origen_nombre)),
     h('td', null, h('span', { class: 'mono' }, `${e.destino}:${e.puerto}`), h('div', { class: 'muted' }, e.destino_nombre)),
@@ -259,16 +326,6 @@ document.getElementById('f-reset').addEventListener('click', () => { ['f-q', 'f-
 document.getElementById('pg-prev').addEventListener('click', () => { state.page--; renderEventos(); });
 document.getElementById('pg-next').addEventListener('click', () => { state.page++; renderEventos(); });
 renderEventos();
-
-// Límites
-document.getElementById('limites').append(...[
-  'Los datos son de prueba: no representan la infraestructura, los registros ni las políticas reales de Kenworth.',
-  `Umbrales usados: ${D.parametros.fallos_umbral} fallos en ${D.parametros.ventana_minutos} minutos, horario ${D.parametros.hora_inicio}:00-${D.parametros.hora_fin}:00 y volumen desde ${fmt(D.parametros.volumen_revision_bytes)} bytes. Son supuestos editables en parametros_alertas.json.`,
-  'Las alertas de sondeo y de éxito tras fallos son una extensión del equipo; no vienen del analizador base ni de una referencia oficial.',
-  'Los puntajes de exposición dependen de supuestos que hay que confirmar con la empresa (por ejemplo, si R02 es realmente una excepción vigente).',
-  'Las actualizaciones pendientes y la restauración de respaldos no se evalúan aquí: faltan versiones, boletines y pruebas de restauración.',
-  'Ningún falso positivo está cerrado de forma definitiva hasta que lo confirme el responsable del activo.'
-].map(t => h('li', null, t)));
 </script>
 </body>
 </html>
