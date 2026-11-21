@@ -120,6 +120,16 @@ tbody tr:hover { background: var(--series-soft); }
 .muted { color: var(--ink3); font-size: 12.5px; }
 .id { font-weight: 650; }
 
+/* Pruebas */
+.test-summary { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.test-summary .big { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.test-summary .txt { color: var(--ink2); }
+.meter { flex: 1 1 160px; max-width: 320px; height: 10px; background: var(--wash); border-radius: 999px; overflow: hidden; display: flex; gap: 2px; }
+.meter i { display: block; height: 100%; }
+.meter .ok { background: var(--good); }
+.meter .bad { background: var(--crit); }
+.b-falla { background: var(--crit); color: #fff; }
+
 /* Filtros */
 .toolbar { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr) auto; gap: 10px; margin-bottom: 14px; }
 input, select, button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line2); border-radius: 8px; padding: 8px 10px; min-width: 0; }
@@ -180,6 +190,13 @@ select { cursor: pointer; }
     <div class="eyebrow">Detección</div>
     <div class="head"><h2>Alertas</h2><span class="hint" id="alertas-hint"></span></div>
     <div class="scroll"><table id="t-alertas"></table></div>
+  </section>
+
+  <section class="card" aria-label="Pruebas">
+    <div class="eyebrow">Validación</div>
+    <div class="head"><h2>Pruebas</h2><span class="hint" id="pruebas-hint"></span></div>
+    <div class="test-summary" id="pruebas-resumen"></div>
+    <div class="scroll"><table id="t-pruebas"></table></div>
   </section>
 
   <section class="card" aria-label="Tablero de eventos">
@@ -288,6 +305,20 @@ ta.append(h('thead', null, h('tr', null, ['Alerta', 'Evento', 'Fecha y hora', 'T
     h('td', null, h('div', { class: 'id' }, a.tipo), h('div', { class: 'muted' }, a.motivo)), h('td', { class: 'mono' }, a.origen_ip), h('td', null, a.activo_destino),
     h('td', null, a.estado.startsWith('Falso') ? h('span', { class: 'badge b-fp' }, '✓ ' + a.estado) : h('span', { class: 'badge b-alerta' }, '⚑ ' + a.estado), h('div', { class: 'muted', style: 'margin-top:4px' }, a.disposicion)),
     h('td', null, a.origen_deteccion)))));
+
+// Pruebas
+const P = D.pruebas, ok = P.filter(p => p.estado === 'Aprobada').length;
+document.getElementById('pruebas-hint').textContent = `Ejecutadas al generar el tablero · ${D.pruebas_ejecutadas}`;
+document.getElementById('pruebas-resumen').append(
+  h('span', { class: 'big' }, `${ok} de ${P.length}`), h('span', { class: 'txt' }, 'pruebas aprobadas'),
+  h('div', { class: 'meter', role: 'img', 'aria-label': `${ok} aprobadas y ${P.length - ok} con falla` },
+    h('i', { class: 'ok', style: `flex:${ok}` }), P.length - ok ? h('i', { class: 'bad', style: `flex:${P.length - ok}` }) : null));
+document.getElementById('t-pruebas').append(
+  h('thead', null, h('tr', null, ['Prueba', 'Caso', 'Entrada', 'Resultado esperado', 'Resultado observado', 'Estado', 'Mejora'].map(x => h('th', null, x)))),
+  h('tbody', null, P.map(p => h('tr', null,
+    h('td', { class: 'mono id' }, p.prueba_id), h('td', { class: 'id' }, p.caso), h('td', null, p.entrada), h('td', null, p.esperado), h('td', null, p.observado),
+    h('td', null, p.estado === 'Aprobada' ? h('span', { class: 'badge b-ok' }, '✓ Aprobada') : h('span', { class: 'badge b-falla' }, '✕ Falla')),
+    h('td', { class: 'muted' }, p.mejora)))));
 
 // Tablero de eventos
 const uniq = key => [...new Set(D.eventos.map(e => e[key]))].sort();

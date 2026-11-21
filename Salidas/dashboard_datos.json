@@ -5754,6 +5754,81 @@
       "caso": ""
     }
   ],
+  "pruebas": [
+    {
+      "prueba_id": "P01",
+      "caso": "Cuatro fallos",
+      "entrada": "4 fallos de autenticación en los minutos 0, 1, 2, 3 (mismo origen, destino y usuario)",
+      "esperado": "0 alerta(s) de fallos repetidos",
+      "observado": "0 alerta(s) de fallos repetidos",
+      "estado": "Aprobada",
+      "mejora": "Ninguna: el umbral de 5 fallos evita alertar con 4. Documentar el umbral como supuesto."
+    },
+    {
+      "prueba_id": "P02",
+      "caso": "Cinco fallos",
+      "entrada": "5 fallos de autenticación en los minutos 0, 1, 2, 3, 4 (mismo origen, destino y usuario)",
+      "esperado": "1 alerta(s) de fallos repetidos",
+      "observado": "1 alerta(s) de fallos repetidos",
+      "estado": "Aprobada",
+      "mejora": "Ninguna: el umbral exacto genera una alerta."
+    },
+    {
+      "prueba_id": "P03",
+      "caso": "Fuera de ventana",
+      "entrada": "5 fallos de autenticación en los minutos 0, 3, 6, 9, 12 (mismo origen, destino y usuario)",
+      "esperado": "0 alerta(s) de fallos repetidos",
+      "observado": "0 alerta(s) de fallos repetidos",
+      "estado": "Aprobada",
+      "mejora": "Ninguna: fallos dispersos en más de 10 minutos no alertan. Evaluar si convendría una segunda regla de largo plazo."
+    },
+    {
+      "prueba_id": "P04",
+      "caso": "Frontera diez minutos",
+      "entrada": "5 fallos de autenticación en los minutos 0, 2, 4, 6, 10 (mismo origen, destino y usuario)",
+      "esperado": "1 alerta(s) de fallos repetidos",
+      "observado": "1 alerta(s) de fallos repetidos",
+      "estado": "Aprobada",
+      "mejora": "Ninguna: el límite de 10 minutos está incluido. Documentarlo en la guía de uso."
+    },
+    {
+      "prueba_id": "P05",
+      "caso": "Actividad autorizada de respaldo (CH01)",
+      "entrada": "E0321 a E0323: accesos exitosos de ADMIN-LAB a BACKUP-LAB entre 02:00 y 02:30",
+      "esperado": "3 señales horarias, las 3 cerradas como falso positivo propuesto",
+      "observado": "3 señales horarias, 3 cerradas como falso positivo propuesto",
+      "estado": "Aprobada",
+      "mejora": "El analizador base no lee CH01: la señal sigue apareciendo y el cierre depende del contexto. Confirmar con el responsable."
+    },
+    {
+      "prueba_id": "P06",
+      "caso": "Límite del permiso CH01",
+      "entrada": "E0324: 85 MB hacia un destino externo a las 02:10, dentro del horario de CH01",
+      "esperado": "2 alertas, ambas siguen por revisar (CH01 no autoriza envío externo)",
+      "observado": "2 alertas, 2 siguen por revisar",
+      "estado": "Aprobada",
+      "mejora": "Preguntar a Infraestructura qué proceso envió ese volumen. No concluir extracción de información."
+    },
+    {
+      "prueba_id": "P07",
+      "caso": "Coincidencia con la referencia",
+      "entrada": "Alertas del analizador base contra 07_Validacion/Referencia_alertas.csv",
+      "esperado": "6 alertas iguales a la referencia",
+      "observado": "6 de 6 coinciden, 0 sobrantes",
+      "estado": "Aprobada",
+      "mejora": "Ninguna. Repetir esta prueba si se cambian umbrales en parametros_alertas.json."
+    },
+    {
+      "prueba_id": "P08",
+      "caso": "No contar alertas repetidas como incidentes",
+      "entrada": "AL004 y AL005 se generan sobre el mismo evento E0324",
+      "esperado": "1 caso para las 2 alertas",
+      "observado": "1 caso(s)",
+      "estado": "Aprobada",
+      "mejora": "Mantener la correlación por evento antes de contar incidentes."
+    }
+  ],
+  "pruebas_ejecutadas": "2026-11-21 10:27",
   "parametros": {
     "fallos_umbral": 5,
     "ventana_minutos": 10,

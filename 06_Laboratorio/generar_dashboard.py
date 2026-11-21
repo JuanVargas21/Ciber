@@ -231,6 +231,55 @@ def main():
                           puerto=int(e["puerto_destino"]), regla=e["regla_id"], usuario=e["usuario_prueba"], bytes=int(e["bytes"]),
                           alertas=alertas_por_evento.get(eid, []), caso=cid))
 
+    # 7) Pruebas: casos controlados del paquete + comprobaciones sobre los datos reales
+    def sintetico(minutos):
+        t0 = datetime.fromisoformat("2026-11-20T09:00:00")
+        return [{"evento_id": f"T{i:02}", "fecha_hora": (t0 + timedelta(minutes=m)).isoformat(), "tipo": "autenticacion",
+                 "origen_ip": "10.60.40.21", "destino_ip": "10.60.20.20", "puerto_destino": "22", "accion": "allow",
+                 "regla_id": "R02", "usuario_prueba": "usr_prueba_07", "resultado": "fallo", "bytes": "1200"}
+                for i, m in enumerate(minutos, 1)]
+
+    pruebas = []
+
+    def registrar(caso, entrada, esperado, observado, ok, mejora):
+        pruebas.append({"prueba_id": f"P{len(pruebas) + 1:02}", "caso": caso, "entrada": entrada, "esperado": esperado,
+                        "observado": observado, "estado": "Aprobada" if ok else "Falla", "mejora": mejora})
+
+    mejoras_ctrl = {
+        "Cuatro fallos": "Ninguna: el umbral de 5 fallos evita alertar con 4. Documentar el umbral como supuesto.",
+        "Cinco fallos": "Ninguna: el umbral exacto genera una alerta.",
+        "Fuera de ventana": "Ninguna: fallos dispersos en más de 10 minutos no alertan. Evaluar si convendría una segunda regla de largo plazo.",
+        "Frontera diez minutos": "Ninguna: el límite de 10 minutos está incluido. Documentarlo en la guía de uso.",
+    }
+    for c in json.loads((ROOT / "07_Validacion/Casos_controlados.json").read_text(encoding="utf-8")):
+        obs = sum(1 for a in analizador.detectar(sintetico(c["minutos"]), cfg) if a["tipo"] == "Fallos repetidos")
+        registrar(c["caso"], f"{len(c['minutos'])} fallos de autenticación en los minutos {', '.join(map(str, c['minutos']))} (mismo origen, destino y usuario)",
+                  f"{c['alertas_esperadas']} alerta(s) de fallos repetidos", f"{obs} alerta(s) de fallos repetidos",
+                  obs == c["alertas_esperadas"], mejoras_ctrl.get(c["caso"], "-"))
+
+    fo = [a for a in alertas if a["tipo"] == "Fuera de horario"]
+    fo_fp = [a for a in fo if a["estado"].startswith("Falso")]
+    registrar("Actividad autorizada de respaldo (CH01)", "E0321 a E0323: accesos exitosos de ADMIN-LAB a BACKUP-LAB entre 02:00 y 02:30",
+              "3 señales horarias, las 3 cerradas como falso positivo propuesto", f"{len(fo)} señales horarias, {len(fo_fp)} cerradas como falso positivo propuesto",
+              len(fo) == 3 and len(fo_fp) == 3,
+              "El analizador base no lee CH01: la señal sigue apareciendo y el cierre depende del contexto. Confirmar con el responsable.")
+    e324 = [a for a in alertas if a["evento_id"] == "E0324"]
+    e324_abiertas = [a for a in e324 if a["estado"] == "Por revisar"]
+    registrar("Límite del permiso CH01", "E0324: 85 MB hacia un destino externo a las 02:10, dentro del horario de CH01",
+              "2 alertas, ambas siguen por revisar (CH01 no autoriza envío externo)", f"{len(e324)} alertas, {len(e324_abiertas)} siguen por revisar",
+              len(e324) == 2 and len(e324_abiertas) == 2,
+              "Preguntar a Infraestructura qué proceso envió ese volumen. No concluir extracción de información.")
+    ref = {(r["evento_id"], r["tipo"]) for r in leer_csv("07_Validacion/Referencia_alertas.csv")}
+    base = {(a["evento_id"], a["tipo"]) for a in alertas if a["origen_deteccion"] == "Analizador base"}
+    registrar("Coincidencia con la referencia", "Alertas del analizador base contra 07_Validacion/Referencia_alertas.csv",
+              f"{len(ref)} alertas iguales a la referencia", f"{len(base & ref)} de {len(ref)} coinciden, {len(base - ref)} sobrantes",
+              base == ref, "Ninguna. Repetir esta prueba si se cambian umbrales en parametros_alertas.json.")
+    en_caso = [c for c in casos if "E0324" in c["eventos"]]
+    registrar("No contar alertas repetidas como incidentes", "AL004 y AL005 se generan sobre el mismo evento E0324",
+              "1 caso para las 2 alertas", f"{len(en_caso)} caso(s)", len(en_caso) == 1,
+              "Mantener la correlación por evento antes de contar incidentes.")
+    ejecutadas_en = datetime.now().strftime("%Y-%m-%d %H:%M")
+
     resumen = {
         "eventos": len(eventos),
         "alertas": len(alertas),
@@ -242,7 +291,7 @@ def main():
         "patrones": dict(Counter(f["patron"] for f in filas)),
         "clases": dict(Counter(f["clase"] for f in filas)),
     }
-    datos = {"resumen": resumen, "casos": casos, "alertas": alertas, "eventos": filas,
+    datos = {"resumen": resumen, "casos": casos, "alertas": alertas, "eventos": filas, "pruebas": pruebas, "pruebas_ejecutadas": ejecutadas_en,
              "parametros": dict(cfg, sondeo_min_eventos=SONDEO_MIN_EVENTOS, sondeo_min_puertos=SONDEO_MIN_PUERTOS),
              "servidores": servidores}
 
@@ -255,6 +304,11 @@ def main():
         w.writeheader()
         for r in filas:
             w.writerow(dict(r, alertas=";".join(r["alertas"])))
+    with (dest / "registro_pruebas.csv").open("w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["caso", "entrada", "resultado_esperado", "resultado_observado", "estado", "mejora"])
+        for p in pruebas:
+            w.writerow([p["caso"], p["entrada"], p["esperado"], p["observado"], p["estado"], p["mejora"]])
     plantilla = (ROOT / "06_Laboratorio" / "dashboard_plantilla.html").read_text(encoding="utf-8")
     blob = json.dumps(datos, ensure_ascii=False).replace("</", "<\\/")
     (dest / "dashboard.html").write_text(plantilla.replace("/*__DATOS__*/null", blob), encoding="utf-8")
